@@ -76,30 +76,29 @@
   box-sizing: border-box;
   border-radius: 6px;
   background: #fafafa;
-  overflow: hidden; /* evita que el contenido se salga */
+  overflow: hidden;
 }
 
   button {
     cursor: pointer;
   }
 
-  /* Agregado: Estilos para la disposición en grid de parches */
 .patch-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 5px;
   margin-top: 5px;
-  max-width: 100%; /* que no exceda el ancho padre */
+  max-width: 100%;
   box-sizing: border-box;
 }
 
 .patch-container img {
-  width: 75px; /* un poco más pequeño para caber bien */
+  width: 75px;
   height: 75px;
   object-fit: contain;
   border: 1px solid #ccc;
   border-radius: 4px;
-  max-width: 100%; /* para que no excedan el contenedor */
+  max-width: 100%;
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -170,7 +169,7 @@ pedidoForm.addEventListener("submit", (e) => {
   }
 
   const camisetaFile = fileInput.files[0];
-  const parcheFiles = Array.from(parcheInput.files).slice(0,4); // hasta 4
+  const parcheFiles = Array.from(parcheInput.files).slice(0,4);
 
   const readerCamiseta = new FileReader();
 
@@ -188,7 +187,6 @@ pedidoForm.addEventListener("submit", (e) => {
       <p><strong>Number:</strong> ${numero || "-"}</p>
     `;
 
-    // Aquí el código modificado para mostrar parches en grid con patch-container
     if (parcheFiles.length) {
       pedido.innerHTML += `<p><strong>Patch(es):</strong></p>`;
 
@@ -240,31 +238,32 @@ document.getElementById("generarImagen").addEventListener("click", () => {
   });
 
   Promise.all(promises).then(() => {
-    // 👉 Forzamos disposición horizontal para la captura
+    const rect = pedidosDiv.getBoundingClientRect();
+
     const originalFlexWrap = pedidosDiv.style.flexWrap;
     pedidosDiv.style.flexWrap = "nowrap";
 
-    html2canvas(pedidosDiv, { useCORS: true, allowTaint: true }).then(
-      (canvas) => {
-        // Restauramos disposición original
-        pedidosDiv.style.flexWrap = originalFlexWrap;
+    html2canvas(pedidosDiv, {
+      useCORS: true,
+      allowTaint: true,
+      width: rect.width,
+      height: rect.height,
+      scale: 2 // ajusta aquí si querés mayor calidad
+    }).then((canvas) => {
+      pedidosDiv.style.flexWrap = originalFlexWrap;
 
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              alert("No se pudo generar la imagen. Intenta nuevamente.");
-              return;
-            }
-            const link = document.createElement("a");
-            link.download = "pedido.png";
-            link.href = URL.createObjectURL(blob);
-            link.click();
-            URL.revokeObjectURL(link.href);
-          },
-          "image/png"
-        );
-      }
-    );
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          alert("No se pudo generar la imagen. Intenta nuevamente.");
+          return;
+        }
+        const link = document.createElement("a");
+        link.download = "pedido.png";
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }, "image/png");
+    });
   });
 });
 </script>
