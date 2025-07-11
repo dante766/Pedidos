@@ -178,14 +178,23 @@ pedidoForm.addEventListener("submit", (e) => {
 
     const pedido = document.createElement("div");
     pedido.className = "pedido-card";
-    pedido.innerHTML = `
+
+    let contenido = `
       <p><strong>Jersey</strong></p>
       <img src="${camisetaURL}" class="preview" />
       <p><strong>Version:</strong> ${version}</p>
       <p><strong>Size:</strong> ${size}</p>
-      <p><strong>Name:</strong> ${nombre || "-"}</p>
-      <p><strong>Number:</strong> ${numero || "-"}</p>
     `;
+
+    if (nombre) {
+      contenido += `<p><strong>Name:</strong> ${nombre}</p>`;
+    }
+
+    if (numero) {
+      contenido += `<p><strong>Number:</strong> ${numero}</p>`;
+    }
+
+    pedido.innerHTML = contenido;
 
     if (parcheFiles.length) {
       pedido.innerHTML += `<p><strong>Patch(es):</strong></p>`;
@@ -213,7 +222,6 @@ pedidoForm.addEventListener("submit", (e) => {
         readerParche.readAsDataURL(file);
       });
     } else {
-      pedido.innerHTML += `<p><strong>Patch:</strong> -</p>`;
       pedidosDiv.appendChild(pedido);
       pedidoForm.reset();
     }
@@ -238,17 +246,15 @@ document.getElementById("generarImagen").addEventListener("click", () => {
   });
 
   Promise.all(promises).then(() => {
-    // Guardamos estilos originales
     const originalStyles = {
       flexWrap: pedidosDiv.style.flexWrap,
       width: pedidosDiv.style.width,
       overflowX: pedidosDiv.style.overflowX,
     };
 
-    const cardWidth = 170 + 10; // ancho tarjeta + gap
+    const cardWidth = 170 + 10;
     const totalWidth = pedidosHechos.length * cardWidth;
 
-    // Forzamos disposición horizontal
     pedidosDiv.style.flexWrap = "nowrap";
     pedidosDiv.style.width = totalWidth + "px";
     pedidosDiv.style.overflowX = "visible";
@@ -260,7 +266,6 @@ document.getElementById("generarImagen").addEventListener("click", () => {
       height: pedidosDiv.offsetHeight,
       scale: 2
     }).then((canvas) => {
-      // Restauramos estilos originales
       pedidosDiv.style.flexWrap = originalStyles.flexWrap;
       pedidosDiv.style.width = originalStyles.width;
       pedidosDiv.style.overflowX = originalStyles.overflowX;
