@@ -45,11 +45,25 @@
 
   select,
   input[type="text"],
-  input[type="number"],
-  input[type="file"] {
+  input[type="number"] {
     width: 180px;
     max-width: 100%;
     box-sizing: border-box;
+  }
+
+  .custom-file {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .custom-file button {
+    cursor: pointer;
+  }
+
+  .custom-file span {
+    font-style: italic;
+    color: #555;
   }
 
   img.preview {
@@ -69,37 +83,37 @@
     justify-content: center;
   }
 
-.pedido-card {
-  border: 1px solid #ddd;
-  padding: 10px;
-  width: 170px;
-  box-sizing: border-box;
-  border-radius: 6px;
-  background: #fafafa;
-  overflow: hidden;
-}
+  .pedido-card {
+    border: 1px solid #ddd;
+    padding: 10px;
+    width: 170px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    background: #fafafa;
+    overflow: hidden;
+  }
 
   button {
     cursor: pointer;
   }
 
-.patch-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 5px;
-  margin-top: 5px;
-  max-width: 100%;
-  box-sizing: border-box;
-}
+  .patch-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+    margin-top: 5px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 
-.patch-container img {
-  width: 75px;
-  height: 75px;
-  object-fit: contain;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  max-width: 100%;
-}
+  .patch-container img {
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-width: 100%;
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
@@ -134,12 +148,23 @@
     <label>Number:
       <input type="number" id="numero" />
     </label>
+
     <label>Jersey:
-      <input type="file" id="imagen" accept="image/*" />
+      <label class="custom-file">
+        <input type="file" id="imagen" accept="image/*" hidden />
+        <button type="button" id="btnImagen">Seleccionar</button>
+        <span id="estadoImagen"> </span>
+      </label>
     </label>
+
     <label>Patch (hasta 4):
-      <input type="file" id="parcheImagen" accept="image/*" multiple />
+      <label class="custom-file">
+        <input type="file" id="parcheImagen" accept="image/*" multiple hidden />
+        <button type="button" id="btnParche">Seleccionar</button>
+        <span id="estadoParche"> </span>
+      </label>
     </label>
+
     <button type="submit">Agregar al pedido</button>
   </form>
 
@@ -154,6 +179,24 @@
 const pedidoForm = document.getElementById("pedidoForm");
 const pedidosDiv = document.getElementById("pedidos");
 
+const imagenInput = document.getElementById("imagen");
+const parcheInput = document.getElementById("parcheImagen");
+const btnImagen = document.getElementById("btnImagen");
+const btnParche = document.getElementById("btnParche");
+const estadoImagen = document.getElementById("estadoImagen");
+const estadoParche = document.getElementById("estadoParche");
+
+btnImagen.addEventListener("click", () => imagenInput.click());
+btnParche.addEventListener("click", () => parcheInput.click());
+
+imagenInput.addEventListener("change", () => {
+  estadoImagen.textContent = imagenInput.files.length ? "Cargado" : " ";
+});
+
+parcheInput.addEventListener("change", () => {
+  estadoParche.textContent = parcheInput.files.length ? "Cargado" : " ";
+});
+
 pedidoForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
@@ -161,14 +204,12 @@ pedidoForm.addEventListener("submit", (e) => {
   const size = document.getElementById("size").value;
   const nombre = document.getElementById("nombre").value.trim();
   const numero = document.getElementById("numero").value.trim();
-  const fileInput = document.getElementById("imagen");
-  const parcheInput = document.getElementById("parcheImagen");
 
-  if (!fileInput.files[0]) {
+  if (!imagenInput.files[0]) {
     return alert("Por favor sube una imagen de la camiseta.");
   }
 
-  const camisetaFile = fileInput.files[0];
+  const camisetaFile = imagenInput.files[0];
   const parcheFiles = Array.from(parcheInput.files).slice(0,4);
 
   const readerCamiseta = new FileReader();
@@ -217,6 +258,8 @@ pedidoForm.addEventListener("submit", (e) => {
             pedido.appendChild(patchContainer);
             pedidosDiv.appendChild(pedido);
             pedidoForm.reset();
+            estadoImagen.textContent = " ";
+            estadoParche.textContent = " ";
           }
         };
         readerParche.readAsDataURL(file);
@@ -224,6 +267,8 @@ pedidoForm.addEventListener("submit", (e) => {
     } else {
       pedidosDiv.appendChild(pedido);
       pedidoForm.reset();
+      estadoImagen.textContent = " ";
+      estadoParche.textContent = " ";
     }
   };
 
