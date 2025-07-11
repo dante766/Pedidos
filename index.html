@@ -238,19 +238,32 @@ document.getElementById("generarImagen").addEventListener("click", () => {
   });
 
   Promise.all(promises).then(() => {
-    const rect = pedidosDiv.getBoundingClientRect();
+    // Guardamos estilos originales
+    const originalStyles = {
+      flexWrap: pedidosDiv.style.flexWrap,
+      width: pedidosDiv.style.width,
+      overflowX: pedidosDiv.style.overflowX,
+    };
 
-    const originalFlexWrap = pedidosDiv.style.flexWrap;
+    const cardWidth = 170 + 10; // ancho tarjeta + gap
+    const totalWidth = pedidosHechos.length * cardWidth;
+
+    // Forzamos disposición horizontal
     pedidosDiv.style.flexWrap = "nowrap";
+    pedidosDiv.style.width = totalWidth + "px";
+    pedidosDiv.style.overflowX = "visible";
 
     html2canvas(pedidosDiv, {
       useCORS: true,
       allowTaint: true,
-      width: rect.width,
-      height: rect.height,
-      scale: 2 // ajusta aquí si querés mayor calidad
+      width: totalWidth,
+      height: pedidosDiv.offsetHeight,
+      scale: 2
     }).then((canvas) => {
-      pedidosDiv.style.flexWrap = originalFlexWrap;
+      // Restauramos estilos originales
+      pedidosDiv.style.flexWrap = originalStyles.flexWrap;
+      pedidosDiv.style.width = originalStyles.width;
+      pedidosDiv.style.overflowX = originalStyles.overflowX;
 
       canvas.toBlob((blob) => {
         if (!blob) {
