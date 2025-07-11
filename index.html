@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pedidos de Camisetas</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+
+  .container {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+    padding: 20px 30px;
+    width: 90%;
+    max-width: 400px;
+    box-sizing: border-box;
+    border-radius: 8px;
+  }
+
+  h1, h2 {
+    text-align: center;
+    margin-top: 0;
+  }
+
+  form {
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+  }
+
+  select,
+  input[type="text"],
+  input[type="number"],
+  input[type="file"] {
+    width: 180px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  img.preview {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    display: block;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .pedidos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+.pedido-card {
+  border: 1px solid #ddd;
+  padding: 10px;
+  width: 170px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  background: #fafafa;
+  overflow: hidden; /* evita que el contenido se salga */
+}
+
+  button {
+    cursor: pointer;
+  }
+
+  /* Agregado: Estilos para la disposición en grid de parches */
+.patch-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+  margin-top: 5px;
+  max-width: 100%; /* que no exceda el ancho padre */
+  box-sizing: border-box;
+}
+
+.patch-container img {
+  width: 75px; /* un poco más pequeño para caber bien */
+  height: 75px;
+  object-fit: contain;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-width: 100%; /* para que no excedan el contenedor */
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Pedidos de Camisetas</h1>
+
+  <form id="pedidoForm">
+    <label>Version:
+      <select id="version">
+        <option value="Player">Player</option>
+        <option value="Fan">Fan</option>
+        <option value="Retro">Retro</option>
+      </select>
+    </label>
+    <label>Size:
+      <select id="size">
+        <option value="S">S</option>
+        <option value="M">M</option>
+        <option value="L">L</option>
+        <option value="XL">XL</option>
+        <option value="2XL">2XL</option>
+        <option value="3XL">3XL</option>
+        <option value="4XL">4XL</option>
+      </select>
+    </label>
+    <label>Name:
+      <input type="text" id="nombre" />
+    </label>
+    <label>Number:
+      <input type="number" id="numero" />
+    </label>
+    <label>Jersey:
+      <input type="file" id="imagen" accept="image/*" />
+    </label>
+    <label>Patch (hasta 4):
+      <input type="file" id="parcheImagen" accept="image/*" multiple />
+    </label>
+    <button type="submit">Agregar al pedido</button>
+  </form>
+
+  <h2>Pedidos actuales</h2>
+  <div id="pedidos" class="pedidos"></div>
+
+  <button id="generarImagen">Generar imagen del pedido</button>
+
+</div>
+
+<script>
+const pedidoForm = document.getElementById("pedidoForm");
+const pedidosDiv = document.getElementById("pedidos");
+
+pedidoForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const version = document.getElementById("version").value;
+  const size = document.getElementById("size").value;
+  const nombre = document.getElementById("nombre").value.trim();
+  const numero = document.getElementById("numero").value.trim();
+  const fileInput = document.getElementById("imagen");
+  const parcheInput = document.getElementById("parcheImagen");
+
+  if (!fileInput.files[0]) {
+    return alert("Por favor sube una imagen de la camiseta.");
+  }
+
+  const camisetaFile = fileInput.files[0];
+  const parcheFiles = Array.from(parcheInput.files).slice(0,4); // hasta 4
+
+  const readerCamiseta = new FileReader();
+
+  readerCamiseta.onload = function (evtCamiseta) {
+    const camisetaURL = evtCamiseta.target.result;
+
+    const pedido = document.createElement("div");
+    pedido.className = "pedido-card";
+    pedido.innerHTML = `
+      <p><strong>Jersey</strong></p>
+      <img src="${camisetaURL}" class="preview" />
+      <p><strong>Version:</strong> ${version}</p>
+      <p><strong>Size:</strong> ${size}</p>
+      <p><strong>Name:</strong> ${nombre || "-"}</p>
+      <p><strong>Number:</strong> ${numero || "-"}</p>
+    `;
+
+    // Aquí el código modificado para mostrar parches en grid con patch-container
+    if (parcheFiles.length) {
+      pedido.innerHTML += `<p><strong>Patch(es):</strong></p>`;
+
+      const patchContainer = document.createElement("div");
+      patchContainer.className = "patch-container";
+
+      let loadedCount = 0;
+
+      parcheFiles.forEach(file => {
+        const readerParche = new FileReader();
+        readerParche.onload = function (evtParche) {
+          const parcheURL = evtParche.target.result;
+          const img = document.createElement("img");
+          img.src = parcheURL;
+          patchContainer.appendChild(img);
+
+          loadedCount++;
+          if (loadedCount === parcheFiles.length) {
+            pedido.appendChild(patchContainer);
+            pedidosDiv.appendChild(pedido);
+            pedidoForm.reset();
+          }
+        };
+        readerParche.readAsDataURL(file);
+      });
+    } else {
+      pedido.innerHTML += `<p><strong>Patch:</strong> -</p>`;
+      pedidosDiv.appendChild(pedido);
+      pedidoForm.reset();
+    }
+  };
+
+  readerCamiseta.readAsDataURL(camisetaFile);
+});
+
+document.getElementById("generarImagen").addEventListener("click", () => {
+  const pedidosHechos = pedidosDiv.querySelectorAll(".pedido-card");
+  if (!pedidosHechos.length) {
+    alert("No hay pedidos para generar la imagen.");
+    return;
+  }
+
+  const images = pedidosDiv.querySelectorAll("img");
+  const promises = Array.from(images).map((img) => {
+    if (img.complete) return Promise.resolve();
+    return new Promise((resolve) => {
+      img.onload = img.onerror = resolve;
+    });
+  });
+
+  Promise.all(promises).then(() => {
+    // 👉 Forzamos disposición horizontal para la captura
+    const originalFlexWrap = pedidosDiv.style.flexWrap;
+    pedidosDiv.style.flexWrap = "nowrap";
+
+    html2canvas(pedidosDiv, { useCORS: true, allowTaint: true }).then(
+      (canvas) => {
+        // Restauramos disposición original
+        pedidosDiv.style.flexWrap = originalFlexWrap;
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              alert("No se pudo generar la imagen. Intenta nuevamente.");
+              return;
+            }
+            const link = document.createElement("a");
+            link.download = "pedido.png";
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(link.href);
+          },
+          "image/png"
+        );
+      }
+    );
+  });
+});
+</script>
+
+</body>
+</html>
