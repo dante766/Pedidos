@@ -114,6 +114,17 @@
     border-radius: 4px;
     max-width: 100%;
   }
+
+  /* Nueva clase para los sponsors con tamaño igual a Patch */
+  .patch-img {
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-width: 100%;
+    margin-top: 5px;
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
@@ -165,6 +176,30 @@
       </label>
     </label>
 
+    <label>Left Sleeve Sponsor:
+      <label class="custom-file">
+        <input type="file" id="izquierdo" accept="image/*" hidden />
+        <button type="button" id="btnIzquierdo">Seleccionar</button>
+        <span id="estadoIzquierdo"> </span>
+      </label>
+    </label>
+
+    <label>Right Sleeve Sponsor:
+      <label class="custom-file">
+        <input type="file" id="derecho" accept="image/*" hidden />
+        <button type="button" id="btnDerecho">Seleccionar</button>
+        <span id="estadoDerecho"> </span>
+      </label>
+    </label>
+
+    <label>Back Sponsor:
+      <label class="custom-file">
+        <input type="file" id="espalda" accept="image/*" hidden />
+        <button type="button" id="btnEspalda">Seleccionar</button>
+        <span id="estadoEspalda"> </span>
+      </label>
+    </label>
+
     <button type="submit">Agregar al pedido</button>
   </form>
 
@@ -186,15 +221,38 @@ const btnParche = document.getElementById("btnParche");
 const estadoImagen = document.getElementById("estadoImagen");
 const estadoParche = document.getElementById("estadoParche");
 
+const izquierdoInput = document.getElementById("izquierdo");
+const derechoInput = document.getElementById("derecho");
+const espaldaInput = document.getElementById("espalda");
+
+const btnIzquierdo = document.getElementById("btnIzquierdo");
+const btnDerecho = document.getElementById("btnDerecho");
+const btnEspalda = document.getElementById("btnEspalda");
+
+const estadoIzquierdo = document.getElementById("estadoIzquierdo");
+const estadoDerecho = document.getElementById("estadoDerecho");
+const estadoEspalda = document.getElementById("estadoEspalda");
+
 btnImagen.addEventListener("click", () => imagenInput.click());
 btnParche.addEventListener("click", () => parcheInput.click());
+btnIzquierdo.addEventListener("click", () => izquierdoInput.click());
+btnDerecho.addEventListener("click", () => derechoInput.click());
+btnEspalda.addEventListener("click", () => espaldaInput.click());
 
 imagenInput.addEventListener("change", () => {
   estadoImagen.textContent = imagenInput.files.length ? "Cargado" : " ";
 });
-
 parcheInput.addEventListener("change", () => {
   estadoParche.textContent = parcheInput.files.length ? "Cargado" : " ";
+});
+izquierdoInput.addEventListener("change", () => {
+  estadoIzquierdo.textContent = izquierdoInput.files.length ? "Cargado" : " ";
+});
+derechoInput.addEventListener("change", () => {
+  estadoDerecho.textContent = derechoInput.files.length ? "Cargado" : " ";
+});
+espaldaInput.addEventListener("change", () => {
+  estadoEspalda.textContent = espaldaInput.files.length ? "Cargado" : " ";
 });
 
 pedidoForm.addEventListener("submit", (e) => {
@@ -237,14 +295,43 @@ pedidoForm.addEventListener("submit", (e) => {
 
     pedido.innerHTML = contenido;
 
+    const finishPedido = () => {
+      pedidosDiv.appendChild(pedido);
+      pedidoForm.reset();
+      [estadoImagen, estadoParche, estadoIzquierdo, estadoDerecho, estadoEspalda].forEach(e => e.textContent = " ");
+    };
+
+    const handleOpcionales = () => {
+      const opcionales = [
+        { fileInput: izquierdoInput, label: "Left Sleeve Sponsor" },
+        { fileInput: derechoInput, label: "Right Sleeve Sponsor" },
+        { fileInput: espaldaInput, label: "Back Sponsor" }
+      ];
+      let count = 0;
+      const total = opcionales.filter(o => o.fileInput.files[0]).length;
+      if (total === 0) {
+        finishPedido();
+        return;
+      }
+      opcionales.forEach(({ fileInput, label }) => {
+        if (fileInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function (evt) {
+            const url = evt.target.result;
+            pedido.innerHTML += `<p><strong>${label}:</strong></p><img src="${url}" class="patch-img" />`;
+            count++;
+            if (count === total) finishPedido();
+          };
+          reader.readAsDataURL(fileInput.files[0]);
+        }
+      });
+    };
+
     if (parcheFiles.length) {
       pedido.innerHTML += `<p><strong>Patch(es):</strong></p>`;
-
       const patchContainer = document.createElement("div");
       patchContainer.className = "patch-container";
-
       let loadedCount = 0;
-
       parcheFiles.forEach(file => {
         const readerParche = new FileReader();
         readerParche.onload = function (evtParche) {
@@ -252,23 +339,16 @@ pedidoForm.addEventListener("submit", (e) => {
           const img = document.createElement("img");
           img.src = parcheURL;
           patchContainer.appendChild(img);
-
           loadedCount++;
           if (loadedCount === parcheFiles.length) {
             pedido.appendChild(patchContainer);
-            pedidosDiv.appendChild(pedido);
-            pedidoForm.reset();
-            estadoImagen.textContent = " ";
-            estadoParche.textContent = " ";
+            handleOpcionales();
           }
         };
         readerParche.readAsDataURL(file);
       });
     } else {
-      pedidosDiv.appendChild(pedido);
-      pedidoForm.reset();
-      estadoImagen.textContent = " ";
-      estadoParche.textContent = " ";
+      handleOpcionales();
     }
   };
 
