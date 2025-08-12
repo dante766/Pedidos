@@ -44,7 +44,7 @@
   }
 
   label > span {
-    min-width: 90px;   /* reducido para que quede más cerca */
+    min-width: 90px;
     margin-right: 4px;
     flex-shrink: 0;
   }
@@ -99,6 +99,14 @@
     overflow: hidden;
   }
 
+  /* Etiquetas en negro con letras blancas */
+  .pedido-card strong {
+    background-color: black;
+    color: white;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+
   button {
     cursor: pointer;
   }
@@ -140,6 +148,12 @@
   <h1>Pedidos de Camisetas</h1>
 
   <form id="pedidoForm">
+
+    <!-- Nuevo campo Team -->
+    <label><span>Team:</span>
+      <input type="text" id="team" />
+    </label>
+
     <label><span>Version:</span>
       <select id="version">
         <option value="Player">Player</option>
@@ -283,6 +297,7 @@ espaldaInput.addEventListener("change", () => {
 pedidoForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
+  const team = document.getElementById("team").value.trim();
   const version = document.getElementById("version").value;
   const size = document.getElementById("size").value;
   const nombre = document.getElementById("nombre").value.trim();
@@ -304,12 +319,12 @@ pedidoForm.addEventListener("submit", (e) => {
     pedido.className = "pedido-card";
 
     let contenido = `
-      <p><strong>Jersey</strong></p>
+      <p><strong>Team:</strong> ${team}</p>
       <img src="${camisetaURL}" class="preview" />
-      <p><strong>Version:</strong> ${version}</p>
-      <p><strong>Size:</strong> ${size}</p>
     `;
 
+    contenido += `<p><strong>Version:</strong> ${version}</p>`;
+    contenido += `<p><strong>Size:</strong> ${size}</p>`;
     if (nombre) contenido += `<p><strong>Name:</strong> ${nombre}</p>`;
     if (numero) contenido += `<p><strong>Number:</strong> ${numero}</p>`;
 
